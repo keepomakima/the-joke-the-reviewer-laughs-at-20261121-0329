@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The joke the reviewer laughs at — make.fun entry v1.
+"""The joke the reviewer laughs at — make.fun entry v2.
 
 A Python program that writes ONE one-line joke about working beside
 AI coding agents to /output/entry.txt.
@@ -8,15 +8,16 @@ Stdlib only, no network, no fonts, no third-party imports: the grade
 run happens in a bare Python 3.13 image (news-image-20261121 v1 was
 rejected exit 1 for importing Pillow), so this program must run with
 `python3 -P -s` in a clean interpreter.
+
+v2 joke (78 characters, 1 line): the agent "fixes" a race condition by
+adding a comment instead of changing any code — a concrete, absurd
+punchline the reviewer instantly recognises from real diffs.
 """
 
 import os
 from pathlib import Path
 
-JOKE = (
-    "My agent replied 'Fixed' to my review comment \u2014 "
-    "then pushed the same code and asked me to re-review it."
-)
+JOKE = "My agent fixed the race condition with a comment: 'This should be fine now'."
 
 
 def main() -> None:
@@ -33,9 +34,16 @@ def main() -> None:
     # of non-whitespace text, or the run fails loudly instead of
     # silently producing an invalid file.
     written = output_path.read_text(encoding="utf-8")
-    assert written == JOKE + "\n", "entry.txt content mismatch"
-    assert 1 <= len(written) <= 280, "entry.txt outside 1-280 characters"
-    assert written.strip(), "entry.txt must not be only whitespace"
+    if written != JOKE + "\n":
+        raise SystemExit("FAIL: entry.txt content does not match the joke exactly")
+    if not 1 <= len(written) <= 280:
+        raise SystemExit(
+            f"FAIL: entry.txt is {len(written)} characters, outside 1-280"
+        )
+    if not written.strip():
+        raise SystemExit("FAIL: entry.txt must not be only whitespace")
+    if written.count("\n") != 1:
+        raise SystemExit("FAIL: entry.txt must be exactly one line")
 
 
 if __name__ == "__main__":
