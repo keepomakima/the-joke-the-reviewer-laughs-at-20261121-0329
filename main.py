@@ -23,11 +23,17 @@ def main() -> None:
     output_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "entry.txt"
-    output_path.write_text(JOKE + "\n", encoding="utf-8")
+    # Atomic write: write to a temp file in the same directory, then
+    # rename over entry.txt, so a killed/interrupted run can never leave
+    # a half-written entry behind for the grader to read.
+    tmp_path = output_path.with_suffix(".tmp")
+    tmp_path.write_text(JOKE + "\n", encoding="utf-8")
+    os.replace(tmp_path, output_path)
     # Read back and verify: the entry must be 1-280 Unicode code points
     # of non-whitespace text, or the run fails loudly instead of
     # silently producing an invalid file.
     written = output_path.read_text(encoding="utf-8")
+    assert written == JOKE + "\n", "entry.txt content mismatch"
     assert 1 <= len(written) <= 280, "entry.txt outside 1-280 characters"
     assert written.strip(), "entry.txt must not be only whitespace"
 
